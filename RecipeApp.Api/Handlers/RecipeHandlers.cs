@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 public static class RecipeHandlers
@@ -21,8 +22,12 @@ public static class RecipeHandlers
         return TypedResults.Ok(new RecipeDetailsResponseDTO(recipe));
     }
 
-    public static async Task<IResult> CreateRecipe(RecipeRequestDTO recipeRequest, RecipeDb db)
+    public static async Task<IResult> CreateRecipe(RecipeRequestDTO recipeRequest, IValidator<RecipeRequestDTO> validator, RecipeDb db)
     {
+        var validationResult = await validator.ValidateAsync(recipeRequest);
+        if (!validationResult.IsValid)
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+
         Recipe recipe = new Recipe
         {
             Name = recipeRequest.Name,
@@ -53,8 +58,12 @@ public static class RecipeHandlers
             new RecipeDetailsResponseDTO(createdRecipe));
     }
 
-    public static async Task<IResult> UpdateRecipe(int id, RecipeRequestDTO recipeRequest, RecipeDb db)
+    public static async Task<IResult> UpdateRecipe(int id, RecipeRequestDTO recipeRequest, IValidator<RecipeRequestDTO> validator, RecipeDb db)
     {
+        var validationResult = await validator.ValidateAsync(recipeRequest);
+        if (!validationResult.IsValid)
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+
         var recipe = await GetFullRecipe(id, db);
         if(recipe is null) return TypedResults.NotFound();
 
