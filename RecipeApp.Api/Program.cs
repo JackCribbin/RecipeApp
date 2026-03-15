@@ -45,6 +45,13 @@ ingredients.MapPost("/", IngredientHandlers.CreateIngredient);
 ingredients.MapPut("/{id}", IngredientHandlers.UpdateIngredient);
 ingredients.MapDelete("/{id}", IngredientHandlers.DeleteIngredient);
 
+var recipes = app.MapGroup("/recipes");
+recipes.MapGet("/", RecipeHandlers.GetRecipeSummaries);
+recipes.MapGet("/{id}", RecipeHandlers.GetRecipeDetails);
+recipes.MapPost("/", RecipeHandlers.CreateRecipe);
+recipes.MapPut("/{id}", RecipeHandlers.UpdateRecipe);
+recipes.MapDelete("/{id}", RecipeHandlers.DeleteRecipe);
+
 app.Run();
 
 public partial class Program { }

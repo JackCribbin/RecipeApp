@@ -53,6 +53,43 @@ public static class RecipeHandlers
             new RecipeDetailsResponseDTO(createdRecipe));
     }
 
+    public static async Task<IResult> UpdateRecipe(int id, RecipeRequestDTO recipeRequest, RecipeDb db)
+    {
+        var recipe = await GetFullRecipe(id, db);
+        if(recipe is null) return TypedResults.NotFound();
+
+        recipe.UpdatedAt = DateTime.UtcNow;
+        recipe.Name = recipeRequest.Name;
+        recipe.Description = recipeRequest.Description;
+        recipe.Servings = recipeRequest.Servings;
+        
+        recipe.RecipeIngredients.Clear();
+        foreach(var ri in recipeRequest.RecipeIngredients)
+            recipe.RecipeIngredients.Add(new RecipeIngredient { Notes = ri.Notes, Quantity = ri.Quantity, IngredientId = ri.IngredientId });
+            
+        recipe.Steps.Clear();
+        foreach(var s in recipeRequest.Steps)
+            recipe.Steps.Add(new RecipeStep { Notes = s.Notes, Instructions = s.Instructions, StepNumber = s.StepNumber });
+
+        recipe.Images.Clear();
+        foreach(var i in recipeRequest.Images)
+            recipe.Images.Add(new RecipeImage { ImageUrl = i.ImageUrl, Caption = i.Caption, IsPrimary = i.IsPrimary });
+
+        await db.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
+
+    public static async Task<IResult> DeleteRecipe(int id, RecipeDb db)
+    {
+        if (await db.Recipes.FindAsync(id) is Recipe recipe)
+        {
+            db.Recipes.Remove(recipe);
+            await db.SaveChangesAsync();
+            return TypedResults.NoContent();
+        }
+        return TypedResults.NotFound();
+    }
+
     private static async Task<Recipe?> GetFullRecipe(int id, RecipeDb db)
     {
         return await db.Recipes
