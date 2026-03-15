@@ -14,12 +14,7 @@ public static class RecipeHandlers
 
     public static async Task<IResult> GetRecipeDetails(int id, RecipeDb db)
     {
-        var recipe = await db.Recipes
-            .Include(r => r.Steps)
-            .Include(r => r.Images)
-            .Include(r => r.RecipeIngredients)
-                .ThenInclude(ri => ri.Ingredient)
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var recipe = await GetFullRecipe(id, db);
 
         if (recipe is null) return TypedResults.NotFound();
 
@@ -33,8 +28,8 @@ public static class RecipeHandlers
             Name = recipeRequest.Name,
             Description = recipeRequest.Description,
             Servings = recipeRequest.Servings,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
             RecipeIngredients = recipeRequest.RecipeIngredients
             .Select(ri => new RecipeIngredient { IngredientId = ri.IngredientId, Quantity = ri.Quantity, Notes = ri.Notes })
             .ToList(),
@@ -49,9 +44,22 @@ public static class RecipeHandlers
         await db.Recipes.AddAsync(recipe);
         await db.SaveChangesAsync();
 
+        var createdRecipe = await GetFullRecipe(recipe.Id, db);
+
+        if(createdRecipe is null) return TypedResults.InternalServerError();
+
         return TypedResults.Created(
             $"/recipes/{recipe.Id}",
-            new RecipeDetailsResponseDTO(recipe));
-        
+            new RecipeDetailsResponseDTO(createdRecipe));
+    }
+
+    private static async Task<Recipe?> GetFullRecipe(int id, RecipeDb db)
+    {
+        return await db.Recipes
+            .Include(r => r.Steps)
+            .Include(r => r.Images)
+            .Include(r => r.RecipeIngredients)
+                .ThenInclude(ri => ri.Ingredient)
+            .FirstOrDefaultAsync(r => r.Id == id);
     }
 }
