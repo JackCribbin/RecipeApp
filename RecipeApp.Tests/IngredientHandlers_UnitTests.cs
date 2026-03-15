@@ -88,7 +88,7 @@ public class IngredientHandlers_UnitTests
         var request = new IngredientRequestDTO { Name = "Eggs", Unit = "No."};
 
         // Act
-        var resp = await IngredientHandlers.CreateIngredient(request, db);
+        var resp = await IngredientHandlers.CreateIngredient(request, new IngredientRequestValidator(), db);
 
         // Assert
         var checkedResp = Assert.IsType<Created<IngredientResponseDTO>>(resp);
@@ -98,6 +98,21 @@ public class IngredientHandlers_UnitTests
         Assert.Equal("No.", checkedResp.Value!.Unit);
 
         Assert.Equal(1, await db.Ingredients.CountAsync());
+    }
+
+    [Fact]
+    public async Task CreateIngredient_ReturnsValidationProblem_WhenNameIsEmpty()
+    {
+        // Arrange
+        var db = CreateInMemoryDb();
+
+        var request = new IngredientRequestDTO { Name = "", Unit = "No."};
+
+        // Act
+        var resp = await IngredientHandlers.CreateIngredient(request, new IngredientRequestValidator(), db);
+
+        // Assert
+        Assert.IsType<ValidationProblem>(resp);
     }
 
     [Fact]
@@ -113,7 +128,7 @@ public class IngredientHandlers_UnitTests
         var request = new IngredientRequestDTO { Name = "Self-Raising Flour", Unit = "milligrams" };
 
         // Act
-        var resp = await IngredientHandlers.UpdateIngredient(1, request, db);
+        var resp = await IngredientHandlers.UpdateIngredient(1, request, new IngredientRequestValidator(), db);
 
         // Assert
         Assert.IsType<NoContent>(resp);
@@ -138,7 +153,7 @@ public class IngredientHandlers_UnitTests
         var request = new IngredientRequestDTO { Name = "Self-Raising Flour", Unit = "milligrams" };
 
         // Act
-        var resp = await IngredientHandlers.UpdateIngredient(5, request, db);
+        var resp = await IngredientHandlers.UpdateIngredient(5, request, new IngredientRequestValidator(), db);
 
         // Assert
         Assert.IsType<NotFound>(resp);

@@ -122,7 +122,7 @@ public class RecipeHandlers_UnitTests
         };
 
         // Act
-        var resp = await RecipeHandlers.CreateRecipe(request, db);
+        var resp = await RecipeHandlers.CreateRecipe(request, new RecipeRequestValidator(), db);
 
         // Assert
         var checkedResp = Assert.IsType<Created<RecipeDetailsResponseDTO>>(resp);
@@ -155,21 +155,66 @@ public class RecipeHandlers_UnitTests
     }
 
     [Fact]
+    public async Task CreateRecipe_ReturnsValidationProblem_WhenNameIsEmpty()
+    {
+        // Arrange
+        var db = CreateInMemoryDb();
+
+        var request = new RecipeRequestDTO
+        {
+            Name = "", Description = "Fudgy brownies", Servings = 4,
+            Steps = [new RecipeStepRequestDTO { Instructions = "Combine all ingredients", Notes = "Don't over-mix", StepNumber = 1}],
+            RecipeIngredients = [new RecipeIngredientRequestDTO { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
+            Images = [new RecipeImageRequestDTO { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }]
+        };
+
+        // Act
+        var resp = await RecipeHandlers.CreateRecipe(request, new RecipeRequestValidator(), db);
+
+        // Assert
+        Assert.IsType<ValidationProblem>(resp);
+    }
+
+    [Fact]
+    public async Task CreateRecipe_ReturnsValidationProblem_WhenNoStepsProvided()
+    {
+        // Arrange
+        var db = CreateInMemoryDb();
+
+        var request = new RecipeRequestDTO
+        {
+            Name = "Brownies", Description = "Fudgy brownies", Servings = 4,
+            RecipeIngredients = [new RecipeIngredientRequestDTO { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
+            Images = [new RecipeImageRequestDTO { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }]
+        };
+
+        // Act
+        var resp = await RecipeHandlers.CreateRecipe(request, new RecipeRequestValidator(), db);
+
+        // Assert
+        Assert.IsType<ValidationProblem>(resp);
+    }
+
+    [Fact]
     public async Task UpdateRecipe_UpdatesRecipeWhenFound()
     {
         // Arrange
         var db = CreateInMemoryDb();
         db.Recipes.Add(
             new Recipe { Name = "Brownies", Description = "Fudgy brownies", Servings = 4,
+            Steps = [new RecipeStep { Instructions = "Combine all ingredients", Notes = "Don't over-mix", StepNumber = 1}],
+            RecipeIngredients = [new RecipeIngredient { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
             Images = [new RecipeImage { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }]  }
         );
         await db.SaveChangesAsync();
 
         var request = new RecipeRequestDTO { Name = "Fudgy Brownies", Description = "Fudgy brownies", Servings = 4, 
+            Steps = [new RecipeStepRequestDTO { Instructions = "Combine all wet ingredients", Notes = "Mix a lot", StepNumber = 1}],
+            RecipeIngredients = [new RecipeIngredientRequestDTO { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
             Images = [new RecipeImageRequestDTO { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }] };
 
         // Act
-        var resp = await RecipeHandlers.UpdateRecipe(1, request, db);
+        var resp = await RecipeHandlers.UpdateRecipe(1, request, new RecipeRequestValidator(), db);
 
         // Assert
         Assert.IsType<NoContent>(resp);
@@ -190,15 +235,19 @@ public class RecipeHandlers_UnitTests
         var db = CreateInMemoryDb();
         db.Recipes.Add(
             new Recipe { Name = "Brownies", Description = "Fudgy brownies", Servings = 4,
+            Steps = [new RecipeStep { Instructions = "Combine all ingredients", Notes = "Don't over-mix", StepNumber = 1}],
+            RecipeIngredients = [new RecipeIngredient { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
             Images = [new RecipeImage { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }]  }
         );
         await db.SaveChangesAsync();
 
         var request = new RecipeRequestDTO { Name = "Fudgy Brownies", Description = "Fudgy brownies", Servings = 4, 
+            Steps = [new RecipeStepRequestDTO { Instructions = "Combine all wet ingredients", Notes = "Mix a lot", StepNumber = 1}],
+            RecipeIngredients = [new RecipeIngredientRequestDTO { IngredientId = 1, Notes = "Use dark chocolate", Quantity = 100 }],
             Images = [new RecipeImageRequestDTO { ImageUrl = "Brownies.png", Caption = "Fudgy brownies", IsPrimary = true }] };
 
         // Act
-        var resp = await RecipeHandlers.UpdateRecipe(5, request, db);
+        var resp = await RecipeHandlers.UpdateRecipe(5, request, new RecipeRequestValidator(), db);
 
         // Assert
         Assert.IsType<NotFound>(resp);
