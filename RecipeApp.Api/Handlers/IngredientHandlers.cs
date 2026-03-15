@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 public static class IngredientHandlers
@@ -20,8 +21,12 @@ public static class IngredientHandlers
     }
 
     public static async Task<IResult> CreateIngredient(
-        IngredientRequestDTO dto, RecipeDb db)
+        IngredientRequestDTO dto, IValidator<IngredientRequestDTO> validator, RecipeDb db)
     {
+        var validationResult = await validator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        
         var ingredient = new Ingredient
         {
             Name = dto.Name,
@@ -39,8 +44,12 @@ public static class IngredientHandlers
     }
 
     public static async Task<IResult> UpdateIngredient(
-        int id, IngredientRequestDTO dto, RecipeDb db)
+        int id, IngredientRequestDTO dto, IValidator<IngredientRequestDTO> validator, RecipeDb db)
     {
+        var validationResult = await validator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+
         var ingredient = await db.Ingredients.FindAsync(id);
         if (ingredient is null) return TypedResults.NotFound();
 
