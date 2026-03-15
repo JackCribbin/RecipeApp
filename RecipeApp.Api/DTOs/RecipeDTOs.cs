@@ -1,13 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
-
 public class RecipeRequestDTO
 {
     public required string Name { get; set; }
     public string? Description { get; set; }
     public int Servings { get; set; }
-    public ICollection<RecipeIngredientResponseDTO> RecipeIngredients { get; set; } = [];
-    public ICollection<RecipeStepResponseDTO> Steps { get; set; } = [];
-    public ICollection<RecipeImageResponseDTO> Images { get; set; } = [];
+    public ICollection<RecipeIngredientRequestDTO> RecipeIngredients { get; set; } = [];
+    public ICollection<RecipeStepRequestDTO> Steps { get; set; } = [];
+    public ICollection<RecipeImageRequestDTO> Images { get; set; } = [];
 }
 
 public class RecipeSummaryResponseDTO
@@ -32,7 +30,7 @@ public class RecipeSummaryResponseDTO
 public class RecipeDetailsResponseDTO
 {
     public int Id { get; set; }
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int Servings { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -100,8 +98,30 @@ public class RecipeImageResponseDTO
 
     public RecipeImageResponseDTO(RecipeImage recipeImage)
     {
+        Id = recipeImage.Id;
         ImageUrl = recipeImage.ImageUrl;
         Caption = recipeImage.Caption;
         IsPrimary = recipeImage.IsPrimary;
     }
+}
+
+public class RecipeIngredientRequestDTO
+{
+    public int IngredientId { get; set; }
+    public decimal Quantity { get; set; }
+    public string? Notes { get; set; }        
+}
+
+public class RecipeStepRequestDTO
+{
+    public int StepNumber { get; set; }
+    public required string Instructions { get; set; }
+    public string? Notes { get; set; }        
+}
+
+public class RecipeImageRequestDTO
+{
+    public required string ImageUrl { get; set; }
+    public string? Caption { get; set; }
+    public bool IsPrimary { get; set; }        
 }
