@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/2b6b90c2-56bc-49b9-97c9-a5b3314900c3/resourceGroups/appsvc_windows_westeurope/providers/Microsoft.Web/sites/recipeapp-api",
+    "appService.deploySubpath": "RecipeApp.Api"
+}
