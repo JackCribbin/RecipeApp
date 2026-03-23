@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<RecipeDb>(opt => 
-    opt.UseSqlite("Data Source=recipes.db"));
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
@@ -13,19 +13,29 @@ builder.Services.AddOpenApiDocument(config =>
     config.Title = "RecipeAPI v1";
     config.Version = "v1";
 });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+            "http://localhost:5173",
+            "https://recipe-frontend-rho.vercel.app"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader();
     });
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<RecipeDb>();
+    db.Database.Migrate();
+}
 
 app.UseCors("AllowFrontend");
 
