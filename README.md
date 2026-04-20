@@ -23,10 +23,13 @@ A RESTful API for managing recipes, built with ASP.NET Core Minimal APIs and Ent
 - Full CRUD for recipes and ingredients
 - Recipes support nested steps, ingredients and images in a single request
 - Shared global ingredient list — ingredients are defined once and reused across recipes
+- Ingredient deletion blocked with a 409 Conflict response if the ingredient is in use by any recipe
 - Pagination on recipe list endpoint with configurable skip/take parameters
 - Input validation on all write endpoints with meaningful error messages
+- Cross-collection validation rules — continuous step numbering, maximum one primary image per recipe
 - Automatic database migrations on startup
-- Swagger UI for interactive API testing
+- Swagger UI for interactive API testing (development environment only)
+- CORS configured for local development and deployed frontend origins
 
 ---
 
@@ -43,6 +46,9 @@ Ingredients exist as a global list that recipes reference via a join table (`Rec
 
 **DTO separation**
 Request and response DTOs are kept separate from EF Core model classes. This prevents circular reference issues during serialisation, controls exactly what data is exposed to clients, and means database schema changes don't automatically break the API contract.
+
+**Summary vs detail response DTOs**
+The recipe list endpoint returns a lightweight `RecipeSummaryResponseDTO` containing only the name, description and primary image. Full recipe detail including steps, ingredients and all images is only returned by the single recipe endpoint. This avoids loading unnecessary data when displaying a list.
 
 **FluentValidation with cross-collection rules**
 Validation includes cross-collection rules that plain data annotations can't express — for example, ensuring recipe step numbers are continuous (1, 2, 3 not 1, 2, 6) and that a recipe has at most one primary image.
@@ -102,7 +108,7 @@ Full interactive documentation is available at the [Swagger UI](https://recipeap
 | GET | `/ingredients/{id}` | Get ingredient by ID |
 | POST | `/ingredients` | Create ingredient |
 | PUT | `/ingredients/{id}` | Update ingredient |
-| DELETE | `/ingredients/{id}` | Delete ingredient |
+| DELETE | `/ingredients/{id}` | Delete ingredient (409 if in use) |
 | GET | `/recipes` | Get recipe summaries (paginated) |
 | GET | `/recipes/{id}` | Get full recipe detail |
 | POST | `/recipes` | Create recipe |
