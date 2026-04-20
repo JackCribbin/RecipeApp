@@ -65,6 +65,10 @@ public static class IngredientHandlers
     {
         if (await db.Ingredients.FindAsync(id) is Ingredient ingredient)
         {
+            bool isUsed = await db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
+            if (isUsed)
+                return TypedResults.Conflict("This ingredient is used by one or more recipes and cannot be deleted.");
+
             db.Ingredients.Remove(ingredient);
             await db.SaveChangesAsync();
             return TypedResults.NoContent();
